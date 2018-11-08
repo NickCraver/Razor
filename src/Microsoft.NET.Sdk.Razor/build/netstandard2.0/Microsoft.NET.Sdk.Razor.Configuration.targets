@@ -59,6 +59,15 @@ Copyright (c) .NET Foundation. All rights reserved.
     <RazorDefaultConfiguration Condition="'$(_TargetingNETCoreApp30OrLater)' == 'true'">MVC-3.0</RazorDefaultConfiguration>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(RazorDefaultComponentConfiguration)'==''">
+    <RazorDefaultComponentConfiguration Condition="'$(_TargetingNETCoreApp30OrLater)' == 'true'">Component-1.0</RazorDefaultComponentConfiguration>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <_MvcRazorExtensionsAssembly>Microsoft.AspNetCore.Mvc.Razor.Extensions</_MvcRazorExtensionsAssembly>
+    <_MvcRazorExtensionsAssemblyFilePath>$(RazorSdkDirectoryRoot)extensions\mvc-3-0\Microsoft.AspNetCore.Mvc.Razor.Extensions.dll</_MvcRazorExtensionsAssemblyFilePath>
+  </PropertyGroup>
+
   <ItemGroup>
     <!--
       While technically the assembly in this package can provide support for the MVC-2.X, don't declare
@@ -68,12 +77,14 @@ Copyright (c) .NET Foundation. All rights reserved.
     <RazorConfiguration Include="MVC-3.0">
       <Extensions>MVC-3.0;$(CustomRazorExtension)</Extensions>
     </RazorConfiguration>
+
+    <RazorComponentConfiguration Include="Component-1.0" />
   </ItemGroup>
 
   <ItemGroup>
     <RazorExtension Include="MVC-3.0">
-      <AssemblyName>Microsoft.AspNetCore.Mvc.Razor.Extensions</AssemblyName>
-      <AssemblyFilePath>$(RazorSdkDirectoryRoot)extensions\mvc-3-0\Microsoft.AspNetCore.Mvc.Razor.Extensions.dll</AssemblyFilePath>
+      <AssemblyName>$(_MvcRazorExtensionsAssembly)</AssemblyName>
+      <AssemblyFilePath>$(_MvcRazorExtensionsAssemblyFilePath)</AssemblyFilePath>
     </RazorExtension>
   </ItemGroup>
 

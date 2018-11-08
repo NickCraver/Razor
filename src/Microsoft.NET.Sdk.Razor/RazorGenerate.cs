@@ -41,6 +41,8 @@ namespace Microsoft.AspNetCore.Razor.Tasks
         [Required]
         public string TagHelperManifest { get; set; }
 
+        public bool GenerateDeclaration { get; set; }
+
         internal override string Command => "generate";
 
         protected override bool ValidateParameters()
@@ -112,6 +114,11 @@ namespace Microsoft.AspNetCore.Razor.Tasks
 
             builder.AppendLine("-c");
             builder.AppendLine(Configuration[0].GetMetadata(Identity));
+
+            if (GenerateDeclaration)
+            {
+                builder.AppendLine("-g");
+            }
 
             for (var i = 0; i < Extensions.Length; i++)
             {

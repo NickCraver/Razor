@@ -27,6 +27,7 @@ namespace Microsoft.AspNetCore.Razor.Tools
             Configuration = Option("-c", "Razor configuration name", CommandOptionType.SingleValue);
             ExtensionNames = Option("-n", "extension name", CommandOptionType.MultipleValue);
             ExtensionFilePaths = Option("-e", "extension file path", CommandOptionType.MultipleValue);
+            GenerateDeclaration = Option("-g", "Generate declaration", CommandOptionType.NoValue);
         }
 
         public CommandOption Sources { get; }
@@ -46,6 +47,8 @@ namespace Microsoft.AspNetCore.Razor.Tools
         public CommandOption ExtensionNames { get; }
 
         public CommandOption ExtensionFilePaths { get; }
+
+        public CommandOption GenerateDeclaration { get; }
 
         protected override Task<int> ExecuteCoreAsync()
         {
@@ -155,6 +158,11 @@ namespace Microsoft.AspNetCore.Razor.Tools
             var engine = RazorProjectEngine.Create(configuration, compositeFileSystem, b =>
             {
                 b.Features.Add(new StaticTagHelperFeature() { TagHelpers = tagHelpers, });
+
+                if (GenerateDeclaration.HasValue())
+                {
+                    b.Features.Add(new EliminateMethodBodyPass());
+                }
             });
 
             var results = GenerateCode(engine, inputItems);
