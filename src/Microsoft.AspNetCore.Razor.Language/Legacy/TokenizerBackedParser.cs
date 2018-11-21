@@ -60,6 +60,8 @@ namespace Microsoft.AspNetCore.Razor.Language.Legacy
             get { return _tokenizer.EndOfFile; }
         }
 
+        protected bool StartOfLine { get; private set; }
+
         protected LanguageCharacteristics<TTokenizer> Language { get; }
 
         protected SyntaxToken Lookahead(int count)
@@ -346,6 +348,16 @@ namespace Microsoft.AspNetCore.Razor.Language.Legacy
             return token;
         }
 
+        protected internal IEnumerable<SyntaxToken> EatWhile(params SyntaxKind[] types)
+        {
+            return EatWhile(token => types.Any(expected => expected == token.Kind));
+        }
+
+        protected internal IEnumerable<SyntaxToken> EatWhile(Func<SyntaxToken, bool> condition)
+        {
+            return ReadWhileLazy(condition);
+        }
+
         protected SyntaxToken GetOptionalToken(SyntaxKind kind)
         {
             if (At(kind))
@@ -409,12 +421,7 @@ namespace Microsoft.AspNetCore.Razor.Language.Legacy
         {
             foreach (var token in tokens)
             {
-                foreach (var error in token.GetDiagnostics())
-                {
-                    Context.ErrorSink.OnError(error);
-                }
-
-                TokenBuilder.Add(token);
+                Accept(token);
             }
         }
 
@@ -422,6 +429,15 @@ namespace Microsoft.AspNetCore.Razor.Language.Legacy
         {
             if (token != null)
             {
+                if (token.Kind == SyntaxKind.NewLine)
+                {
+                    StartOfLine = true;
+                }
+                else if (token.Kind != SyntaxKind.Whitespace)
+                {
+                    StartOfLine = false;
+                }
+
                 foreach (var error in token.GetDiagnostics())
                 {
                     Context.ErrorSink.OnError(error);
