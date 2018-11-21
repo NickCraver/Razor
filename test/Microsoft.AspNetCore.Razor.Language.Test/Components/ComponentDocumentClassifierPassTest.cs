@@ -13,6 +13,7 @@ namespace Microsoft.AspNetCore.Razor.Language.Components
         {
             // Arrange
             var codeDocument = RazorCodeDocument.Create(RazorSourceDocument.Create("some-content", "Test.razor"));
+            codeDocument.SetInputDocumentKind(InputDocumentKind.Component);
 
             var projectEngine = CreateProjectEngine();
             var irDocument = CreateIRDocument(projectEngine, codeDocument);
@@ -34,6 +35,7 @@ namespace Microsoft.AspNetCore.Razor.Language.Components
             // Arrange
             var properties = new RazorSourceDocumentProperties(filePath: "/MyApp/Test.razor", relativePath: "Test.razor");
             var codeDocument = RazorCodeDocument.Create(RazorSourceDocument.Create("some-content", properties));
+            codeDocument.SetInputDocumentKind(InputDocumentKind.Component);
 
             var projectEngine = CreateProjectEngine();
             var irDocument = CreateIRDocument(projectEngine, codeDocument);
@@ -57,6 +59,7 @@ namespace Microsoft.AspNetCore.Razor.Language.Components
             // Arrange
             var properties = new RazorSourceDocumentProperties(filePath: "/MyApp/Test.razor", relativePath: "Test.razor");
             var codeDocument = RazorCodeDocument.Create(RazorSourceDocument.Create("some-content", properties));
+            codeDocument.SetInputDocumentKind(InputDocumentKind.Component);
 
             var projectEngine = CreateProjectEngine();
             var irDocument = CreateIRDocument(projectEngine, codeDocument);
@@ -83,6 +86,7 @@ namespace Microsoft.AspNetCore.Razor.Language.Components
             var relativePath = "/Pages/Announcements/Banner.razor";
             var properties = new RazorSourceDocumentProperties(filePath: $"/MyApp{relativePath}", relativePath: relativePath);
             var codeDocument = RazorCodeDocument.Create(RazorSourceDocument.Create("some-content", properties));
+            codeDocument.SetInputDocumentKind(InputDocumentKind.Component);
 
             var projectEngine = CreateProjectEngine();
             var irDocument = CreateIRDocument(projectEngine, codeDocument);
@@ -107,6 +111,7 @@ namespace Microsoft.AspNetCore.Razor.Language.Components
             // Arrange
             var properties = new RazorSourceDocumentProperties(filePath: @"x:\path.with+invalid-chars.razor", relativePath: "path.with+invalid-chars.razor");
             var codeDocument = RazorCodeDocument.Create(RazorSourceDocument.Create("some-content", properties));
+            codeDocument.SetInputDocumentKind(InputDocumentKind.Component);
 
             var projectEngine = CreateProjectEngine();
             var irDocument = CreateIRDocument(projectEngine, codeDocument);
@@ -129,6 +134,7 @@ namespace Microsoft.AspNetCore.Razor.Language.Components
         {
             // Arrange
             var codeDocument = RazorCodeDocument.Create(RazorSourceDocument.Create("some-content", "Test.razor"));
+            codeDocument.SetInputDocumentKind(InputDocumentKind.Component);
 
             var projectEngine = CreateProjectEngine();
             var irDocument = CreateIRDocument(projectEngine, codeDocument);

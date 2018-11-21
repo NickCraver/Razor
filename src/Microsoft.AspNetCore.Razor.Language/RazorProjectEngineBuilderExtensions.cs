@@ -146,6 +146,38 @@ namespace Microsoft.AspNetCore.Razor.Language
         }
 
         /// <summary>
+        /// Attempts to add the specified <see cref="DirectiveDescriptor"/>.
+        /// </summary>
+        /// <param name="builder">The <see cref="RazorProjectEngineBuilder"/>.</param>
+        /// <param name="directive">The <see cref="DirectiveDescriptor"/> to add.</param>
+        /// <returns><c>true</c> if succeeded.</returns>
+        public static bool TryAddDirective(this RazorProjectEngineBuilder builder, DirectiveDescriptor directive)
+        {
+            if (builder == null)
+            {
+                throw new ArgumentNullException(nameof(builder));
+            }
+
+            if (directive == null)
+            {
+                throw new ArgumentNullException(nameof(directive));
+            }
+
+            var directiveFeature = GetDirectiveFeature(builder);
+
+            foreach (var registeredDirective in directiveFeature.Directives)
+            {
+                if (ReferenceEquals(registeredDirective, directive))
+                {
+                    return false;
+                }
+            }
+
+            directiveFeature.Directives.Add(directive);
+            return true;
+        }
+
+        /// <summary>
         /// Adds the provided <see cref="RazorProjectItem" />s as imports to all project items processed
         /// by the <see cref="RazorProjectEngine"/>.
         /// </summary>

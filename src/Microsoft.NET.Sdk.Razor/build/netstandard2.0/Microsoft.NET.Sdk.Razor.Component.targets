@@ -16,16 +16,11 @@ Copyright (c) .NET Foundation. All rights reserved.
     <!-- Used for tracking inputs to component generation -->
     <_RazorComponentInputHash></_RazorComponentInputHash>
     <_RazorComponentInputCacheFile>$(IntermediateOutputPath)$(MSBuildProjectName).RazorComponent.input.cache</_RazorComponentInputCacheFile>
-
-    <_ResolveComponentsInputCache>$(IntermediateOutputPath)$(MSBuildProjectName).RazorComponent.definition.cache</_ResolveComponentsInputCache>
-
-    <_RazorComponentDeclarationManifest>$(IntermediateOutputPath)$(MSBuildProjectName).RazorComponents.declaration.json</_RazorComponentDeclarationManifest>
-    <_RazorComponentDefinitionManifest>$(IntermediateOutputPath)$(MSBuildProjectName).RazorComponents.definition.json</_RazorComponentDefinitionManifest>
   </PropertyGroup>
 
   <ItemGroup>
     <!-- Path used for the temporary compilation we produce for component discovery -->
-    <_RazorComponentDeclarationAssembly Include="$(IntermediateOutputPath)RazorTemp\$(TargetName).dll" />
+    <_RazorComponentDeclarationAssembly Include="$(_RazorComponentDeclarationOutputPath)$(TargetName).dll" />
   </ItemGroup>
 
   <Target Name="_HashRazorComponentInputs" Condition="'@(RazorComponentWithTargetPath->Count())'!='0'">
@@ -88,6 +83,11 @@ Copyright (c) .NET Foundation. All rights reserved.
       Directories="%(_RazorComponentDeclaration.RelativeDir)"
       Condition="!Exists('%(_RazorComponentDeclaration.RelativeDir)')" />
 
+    <PropertyGroup>
+      <!-- This file will not exist, but we need some value -->
+      <_RazorComponentDeclarationManifest>$(IntermediateOutputPath)$(MSBuildProjectName).RazorComponents.declaration.json</_RazorComponentDeclarationManifest>
+    </PropertyGroup>
+
     <RazorGenerate
       Debug="$(_RazorDebugGenerateCodeTask)"
       DebugTool="$(_RazorDebugGenerateCodeTool)"
@@ -96,7 +96,7 @@ Copyright (c) .NET Foundation. All rights reserved.
       ForceServer="$(_RazorForceBuildServer)"
       PipeName="$(_RazorBuildServerPipeName)"
       Version="$(RazorLangVersion)"
-      Configuration="@(ResolvedRazorComponentConfiguration)"
+      Configuration="@(ResolvedRazorConfiguration)"
       Extensions="@(ResolvedRazorExtension)"
       Sources="@(_RazorComponentDeclarationSources)"
       ProjectRoot="$(MSBuildProjectDirectory)"
@@ -243,80 +243,30 @@ Copyright (c) .NET Foundation. All rights reserved.
     </ItemGroup>
   </Target>
 
-  <Target
-    Name="RazorResolveComponents"
-    Inputs="$(MSBuildAllProjects);@(ReferencePathWithRefAssemblies);@(_RazorComponentDeclarationAssembly)"
-    Outputs="$(_ResolveComponentsInputCache)"
-    Condition="Exists('@(_RazorComponentDeclarationAssembly)')">
-
-    <!-- Include the temp assembly as a reference so we can discover components from the app.-->
+  <Target Name="_ResolveComponentRazorGenerateInputs">
     <ItemGroup>
-      <_ResolveRazorComponentReferencePaths Include="@(ReferencePathWithRefAssemblies)" />
-      <_ResolveRazorComponentReferencePaths Include="%(_RazorComponentDeclarationAssembly.FullPath)" Condition="Exists('@(_RazorComponentDeclarationAssembly)')" />
+      <!-- Add RazorComponent files to the set of files to be code-gened. -->
+      <RazorGenerateWithTargetPath Include="@(RazorComponentWithTargetPath)" />
     </ItemGroup>
 
-    <!--
-      We're manipulating our output directly here because we want to separate the actual up-to-date check
-      of RazorGenerateComponentDefinition from the output of this target. Many times the set of tag helpers doesn't change
-      so we don't need to regenerate the code.
-      -->
-    <Touch
-      Files="$(_ResolveComponentsInputCache)"
-      AlwaysCreate="true" />
-
-    <ItemGroup>
-      <FileWrites Include="$(_ResolveComponentsInputCache)" />
-    </ItemGroup>
-
-    <RazorTagHelper
-      Debug="$(_RazorDebugTagHelperTask)"
-      DebugTool="$(_RazorDebugTagHelperTool)"
-      ToolAssembly="$(_RazorToolAssembly)"
-      UseServer="$(UseRazorBuildServer)"
-      ForceServer="$(_RazorForceBuildServer)"
-      PipeName="$(_RazorBuildServerPipeName)"
-      Version="$(RazorLangVersion)"
-      Configuration="@(ResolvedRazorComponentConfiguration)"
-      Extensions="@(RazorExtension)"
-      Assemblies="@(_ResolveRazorComponentReferencePaths)"
-      ProjectRoot="$(MSBuildProjectDirectory)"
-      TagHelperManifest="$(_RazorComponentDefinitionManifest)">
-      <Output
-        TaskParameter="TagHelperManifest"
-        ItemName="FileWrites"/>
-    </RazorTagHelper>
-
+    <!-- Point to the declaration assembly to perform taghelper discovery -->
+    <PropertyGroup>
+      <_RazorGenerateTargetReferenceAssembly>@(_RazorComponentDeclarationAssembly->Metadata('FullPath'))</_RazorGenerateTargetReferenceAssembly>
+    </PropertyGroup>
   </Target>
 
-   <!--
-    Generates 'definition' files for each component, using the temp-compiled assembly as an input.
-    These files are used in the real build and don't participate in design time builds.
-  -->
+  <!-- 
+    Once RazorCompileComponentDeclaration is completed, we have all the inputs required for code generation of
+    RazorComponents and RazorGenerate items. We'll initialize the inputs for RazorGenerate and invoke it.
+    This should result in RazorGenerate \ RazorTagHelper targets no-oping when it get invoked as 
+    part of PrepareForRun \ PrepareForPublish for non-components (.cshtml) files.
+   -->
   <Target
     Name="RazorGenerateComponentDefinition"
-    Inputs="$(MSBuildAllProjects);@(RazorComponentWithTargetPath);$(_RazorComponentDefinitionManifest)"
-    Outputs="@(_RazorComponentDefinition)"
-    Condition="'$(DesignTimeBuild)'!='true'">
+    DependsOnTargets="_ResolveComponentRazorGenerateInputs;RazorGenerate"
+    Condition="'$(DesignTimeBuild)' != 'true' AND '@(_RazorComponentDefinition->Count())' != '0' AND Exists('@(_RazorComponentDeclarationAssembly)')">
 
-    <RazorGenerate
-      Debug="$(_RazorDebugGenerateCodeTask)"
-      DebugTool="$(_RazorDebugGenerateCodeTool)"
-      ToolAssembly="$(_RazorToolAssembly)"
-      UseServer="$(UseRazorBuildServer)"
-      ForceServer="$(_RazorForceBuildServer)"
-      PipeName="$(_RazorBuildServerPipeName)"
-      Version="$(RazorLangVersion)"
-      Configuration="@(ResolvedRazorComponentConfiguration)"
-      Extensions="@(ResolvedRazorExtension)"
-      Sources="@(RazorComponentWithTargetPath)"
-      ProjectRoot="$(MSBuildProjectDirectory)"
-      TagHelperManifest="$(_RazorComponentDefinitionManifest)" />
-
-    <ItemGroup>
-      <FileWrites Include="@(_RazorComponentDefinition)" />
-    </ItemGroup>
-
-    <ItemGroup>
+    <ItemGroup Condition="'$(DesignTimeBuild)' != 'true'">
       <Compile Include="@(_RazorComponentDefinition)" />
     </ItemGroup>
   </Target>
@@ -325,8 +275,7 @@ Copyright (c) .NET Foundation. All rights reserved.
     <RazorComponentGenerateCoreDependsOn>
       RazorGenerateComponentDeclaration;
       RazorCompileComponentDeclaration;
-      RazorResolveComponents;
-      RazorGenerateComponentDefinition
+      RazorGenerateComponentDefinition;
     </RazorComponentGenerateCoreDependsOn>
   </PropertyGroup>
 

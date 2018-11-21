@@ -2,14 +2,15 @@
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using Microsoft.AspNetCore.Razor.Language.Components;
+using Microsoft.AspNetCore.Razor.Language.IntegrationTests;
 using Microsoft.AspNetCore.Razor.Language.Intermediate;
 using Xunit;
 
-namespace Microsoft.AspNetCore.Razor.Language.IntegrationTests
+namespace Microsoft.AspNetCore.Razor.Language
 {
-    public class ComponentIntegrationTest : IntegrationTestBase
+    public class SuppressPrimaryMethodBodyIntegrationTest : IntegrationTestBase
     {
-        public ComponentIntegrationTest()
+        public SuppressPrimaryMethodBodyIntegrationTest()
             : base(generateBaselines: null)
         {
             Configuration = RazorConfiguration.Default;
@@ -21,20 +22,34 @@ namespace Microsoft.AspNetCore.Razor.Language.IntegrationTests
         [Fact]
         public void BasicTest()
         {
-            var projectEngine = CreateProjectEngine(engine =>
+            var engine = CreateProjectEngine(e =>
             {
-                ComponentExtensions.Register(engine);
-                engine.Features.Add(new InputDocumentKindClassifierPass());
+                ComponentExtensions.Register(e);
+                e.Features.Add(new SetSuppressPrimaryMethodBodyFeature());
+                e.Features.Add(new InputDocumentKindClassifierPass());
             });
 
             var projectItem = CreateProjectItemFromFile();
 
             // Act
-            var codeDocument = projectEngine.Process(projectItem);
+            var codeDocument = engine.Process(projectItem);
 
             // Assert
             AssertDocumentNodeMatchesBaseline(codeDocument.GetDocumentIntermediateNode());
-            AssertCSharpDocumentMatchesBaseline(codeDocument.GetCSharpDocument());
+
+            var csharpDocument = codeDocument.GetCSharpDocument();
+            AssertCSharpDocumentMatchesBaseline(csharpDocument);
+            Assert.Empty(csharpDocument.Diagnostics);
+        }
+
+        private class SetSuppressPrimaryMethodBodyFeature : RazorEngineFeatureBase, IConfigureRazorCodeGenerationOptionsFeature
+        {
+            public int Order { get; set; }
+
+            public void Configure(RazorCodeGenerationOptionsBuilder options)
+            {
+                options.SuppressPrimaryMethodBody = true;
+            }
         }
 
         private class InputDocumentKindClassifierPass : RazorEngineFeatureBase, IRazorDocumentClassifierPass

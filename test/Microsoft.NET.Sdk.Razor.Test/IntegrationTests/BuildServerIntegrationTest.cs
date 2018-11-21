@@ -230,7 +230,7 @@ namespace Microsoft.AspNetCore.Razor.Design.IntegrationTests
         [InitializeTestProject("MvcWithComponents")]
         public async Task Build_MvcWithComponents()
         {
-            var componentsDefinitionFile = Path.Combine(IntermediateOutputPath, "MvcWithComponents.RazorComponents.definition.json");
+            var tagHelperOutputCacheFile = Path.Combine(IntermediateOutputPath, "MvcWithComponents.TagHelpers.output.cache");
 
             var result = await DotnetMSBuild(
                 "Build",
@@ -243,15 +243,15 @@ namespace Microsoft.AspNetCore.Razor.Design.IntegrationTests
             Assert.FileExists(result, OutputPath, "MvcWithComponents.Views.pdb");
 
             // Verify tag helper discovery from components work
-            Assert.FileExists(result, componentsDefinitionFile);
+            Assert.FileExists(result, tagHelperOutputCacheFile);
             Assert.FileContains(
                 result,
-                componentsDefinitionFile,
+                tagHelperOutputCacheFile,
                 @"""Name"":""MvcWithComponents.TestComponent""");
 
             Assert.FileContains(
                 result,
-                componentsDefinitionFile,
+                tagHelperOutputCacheFile,
                 @"""Name"":""MvcWithComponents.Views.Shared.NavMenu""");
         }
 

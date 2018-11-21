@@ -2,10 +2,9 @@
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using System;
-using Microsoft.AspNetCore.Razor.Language;
 using Microsoft.AspNetCore.Razor.Language.Intermediate;
 
-namespace Microsoft.AspNetCore.Razor.Tools
+namespace Microsoft.AspNetCore.Razor.Language.Extensions
 {
     internal sealed class EliminateMethodBodyPass : IntermediateNodePassBase, IRazorOptimizationPass
     {
@@ -22,6 +21,12 @@ namespace Microsoft.AspNetCore.Razor.Tools
             if (documentNode == null)
             {
                 throw new ArgumentNullException(nameof(documentNode));
+            }
+
+            var codeGenerationOptions = codeDocument.GetCodeGenerationOptions();
+            if (codeGenerationOptions == null || !codeGenerationOptions.SuppressPrimaryMethodBody)
+            {
+                return;
             }
 
             var method = documentNode.FindPrimaryMethod();

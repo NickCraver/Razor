@@ -17,7 +17,13 @@ namespace Microsoft.AspNetCore.Razor.Language.Components
 
         protected override string DocumentKind => ComponentDocumentKind;
 
-        protected override bool IsMatch(RazorCodeDocument codeDocument, DocumentIntermediateNode documentNode) => true;
+        // Ensure this runs before the MVC classifiers which have Order = 0
+        public override int Order => -100;
+
+        protected override bool IsMatch(RazorCodeDocument codeDocument, DocumentIntermediateNode documentNode)
+        {
+            return codeDocument.GetInputDocumentKind() == InputDocumentKind.Component;
+        }
 
         protected override void OnDocumentStructureCreated(RazorCodeDocument codeDocument, NamespaceDeclarationIntermediateNode @namespace, ClassDeclarationIntermediateNode @class, MethodDeclarationIntermediateNode method)
         {

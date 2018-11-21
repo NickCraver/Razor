@@ -8,8 +8,6 @@ namespace Microsoft.AspNetCore.Razor.Language.Components
 {
     public static class ComponentExtensions
     {
-        internal const string ConfigurationName = "Component-1.0";
-
         public static void Register(RazorProjectEngineBuilder builder)
         {
             if (builder == null)

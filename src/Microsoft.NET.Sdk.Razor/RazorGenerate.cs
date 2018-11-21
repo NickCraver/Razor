@@ -17,6 +17,7 @@ namespace Microsoft.AspNetCore.Razor.Tasks
         };
 
         private const string GeneratedOutput = "GeneratedOutput";
+        private const string DocumentKind = "DocumentKind";
         private const string TargetPath = "TargetPath";
         private const string FullPath = "FullPath";
         private const string Identity = "Identity";
@@ -101,6 +102,13 @@ namespace Microsoft.AspNetCore.Razor.Tasks
                 builder.AppendLine("-o");
                 var outputPath = Path.Combine(ProjectRoot, input.GetMetadata(GeneratedOutput));
                 builder.AppendLine(outputPath);
+
+                var kind = input.GetMetadata(DocumentKind);
+                if (!string.IsNullOrEmpty(kind))
+                {
+                    builder.AppendLine("-k");
+                    builder.AppendLine(kind);
+                }
             }
 
             builder.AppendLine("-p");
@@ -117,7 +125,7 @@ namespace Microsoft.AspNetCore.Razor.Tasks
 
             if (GenerateDeclaration)
             {
-                builder.AppendLine("-g");
+                builder.AppendLine("--generate-declaration");
             }
 
             for (var i = 0; i < Extensions.Length; i++)

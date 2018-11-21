@@ -44,7 +44,7 @@ namespace Microsoft.AspNetCore.Razor.Design.IntegrationTests
 
         protected string RazorIntermediateOutputPath => Path.Combine(IntermediateOutputPath, "Razor");
 
-        protected string RazorComponentIntermediateOutputPath => Path.Combine(IntermediateOutputPath, "RazorComponent");
+        protected string RazorComponentIntermediateOutputPath => Path.Combine(IntermediateOutputPath, "RazorDeclaration");
 
         internal static string TargetFramework
         {

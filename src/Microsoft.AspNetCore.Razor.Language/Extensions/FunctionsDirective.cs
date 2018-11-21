@@ -23,8 +23,10 @@ namespace Microsoft.AspNetCore.Razor.Language.Extensions
                 throw new ArgumentNullException(nameof(builder));
             }
 
-            builder.AddDirective(Directive);
-            builder.Features.Add(new FunctionsDirectivePass());
+            if (builder.TryAddDirective(Directive))
+            {
+                builder.Features.Add(new FunctionsDirectivePass());
+            }
         }
 
         #region Obsolete

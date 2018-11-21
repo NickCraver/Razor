@@ -177,9 +177,9 @@ namespace Microsoft.AspNetCore.Razor.Design.IntegrationTests
         public async Task BuildComponents_RegeneratesComponentDefinition_WhenFilesChange()
         {
             // Act - 1
-            var componentsDefinitionFile = Path.Combine(IntermediateOutputPath, "MvcWithComponents.RazorComponents.definition.json");
+            var tagHelperOutputCache = Path.Combine(IntermediateOutputPath, "MvcWithComponents.TagHelpers.output.cache");
 
-            var generatedFile = Path.Combine(RazorComponentIntermediateOutputPath, "Views", "Shared", "NavMenu.razor.g.cs");
+            var generatedFile = Path.Combine(RazorIntermediateOutputPath, "Views", "Shared", "NavMenu.razor.g.cs");
             var generatedDefinitionFile = Path.Combine(RazorComponentIntermediateOutputPath, "Views", "Shared", "NavMenu.razor.g.cs");
 
             // Assert - 1
@@ -195,13 +195,13 @@ namespace Microsoft.AspNetCore.Razor.Design.IntegrationTests
             Assert.FileExists(result, generatedFile);
             var generatedFileThumbprint = GetThumbPrint(generatedFile);
 
-            Assert.FileExists(result, componentsDefinitionFile);
+            Assert.FileExists(result, tagHelperOutputCache);
             Assert.FileContains(
                 result,
-                componentsDefinitionFile,
+                tagHelperOutputCache,
                 @"""Name"":""MvcWithComponents.Views.Shared.NavMenu""");
 
-            var definitionThumbprint = GetThumbPrint(componentsDefinitionFile);
+            var definitionThumbprint = GetThumbPrint(tagHelperOutputCache);
 
             // Act - 2
             ReplaceContent("Different things", "Views", "Shared", "NavMenu.razor");
@@ -216,14 +216,14 @@ namespace Microsoft.AspNetCore.Razor.Design.IntegrationTests
             Assert.FileExists(result, generatedFile);
             Assert.NotEqual(generatedFileThumbprint, GetThumbPrint(generatedFile));
 
-            Assert.FileExists(result, componentsDefinitionFile);
+            Assert.FileExists(result, tagHelperOutputCache);
             Assert.FileContains(
                 result,
-                componentsDefinitionFile,
+                tagHelperOutputCache,
                 @"""Name"":""MvcWithComponents.Views.Shared.NavMenu""");
 
             // TODO:
-            Assert.Equal(definitionThumbprint, GetThumbPrint(componentsDefinitionFile));
+            Assert.Equal(definitionThumbprint, GetThumbPrint(tagHelperOutputCache));
         }
 
         [Fact]
@@ -231,10 +231,10 @@ namespace Microsoft.AspNetCore.Razor.Design.IntegrationTests
         public async Task BuildComponents_DoesNotModifyFiles_IfFilesDoNotChange()
         {
             // Act - 1
-            var componentsDefinitionFile = Path.Combine(IntermediateOutputPath, "MvcWithComponents.RazorComponents.definition.json");
+            var tagHelperOutputCache = Path.Combine(IntermediateOutputPath, "MvcWithComponents.TagHelpers.output.cache");
 
             var file = Path.Combine(Project.DirectoryPath, "Views", "Shared", "NavMenu.razor.g.cs");
-            var generatedFile = Path.Combine(RazorComponentIntermediateOutputPath, "Views", "Shared", "NavMenu.razor.g.cs");
+            var generatedFile = Path.Combine(RazorIntermediateOutputPath, "Views", "Shared", "NavMenu.razor.g.cs");
             var generatedDefinitionFile = Path.Combine(RazorComponentIntermediateOutputPath, "Views", "Shared", "NavMenu.razor.g.cs");
 
             // Assert - 1
@@ -250,13 +250,13 @@ namespace Microsoft.AspNetCore.Razor.Design.IntegrationTests
             Assert.FileExists(result, generatedFile);
             var generatedFileThumbprint = GetThumbPrint(generatedFile);
 
-            Assert.FileExists(result, componentsDefinitionFile);
+            Assert.FileExists(result, tagHelperOutputCache);
             Assert.FileContains(
                 result,
-                componentsDefinitionFile,
+                tagHelperOutputCache,
                 @"""Name"":""MvcWithComponents.Views.Shared.NavMenu""");
 
-            var definitionThumbprint = GetThumbPrint(componentsDefinitionFile);
+            var definitionThumbprint = GetThumbPrint(tagHelperOutputCache);
 
             // Act - 2
             result = await DotnetMSBuild("Build");
@@ -270,13 +270,13 @@ namespace Microsoft.AspNetCore.Razor.Design.IntegrationTests
             Assert.FileExists(result, generatedFile);
             Assert.Equal(generatedFileThumbprint, GetThumbPrint(generatedFile));
 
-            Assert.FileExists(result, componentsDefinitionFile);
+            Assert.FileExists(result, tagHelperOutputCache);
             Assert.FileContains(
                 result,
-                componentsDefinitionFile,
+                tagHelperOutputCache,
                 @"""Name"":""MvcWithComponents.Views.Shared.NavMenu""");
 
-            Assert.Equal(definitionThumbprint, GetThumbPrint(componentsDefinitionFile));
+            Assert.Equal(definitionThumbprint, GetThumbPrint(tagHelperOutputCache));
         }
 
         [Fact]

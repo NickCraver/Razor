@@ -176,6 +176,7 @@ namespace Microsoft.AspNetCore.Razor.Language
             features.Add(new DirectiveRemovalOptimizationPass());
             features.Add(new DefaultTagHelperOptimizationPass());
             features.Add(new PreallocatedTagHelperAttributeOptimizationPass());
+            features.Add(new EliminateMethodBodyPass());
 
             // Default Code Target Extensions
             var targetExtensionFeature = new DefaultRazorTargetExtensionFeature();
@@ -222,11 +223,6 @@ namespace Microsoft.AspNetCore.Razor.Language
                     var initializer = extension.CreateInitializer();
                     initializer?.Initialize(builder);
                 }
-            }
-
-            if (builder.Configuration.ConfigurationName == ComponentExtensions.ConfigurationName)
-            {
-                ComponentExtensions.Register(builder);
             }
         }
     }

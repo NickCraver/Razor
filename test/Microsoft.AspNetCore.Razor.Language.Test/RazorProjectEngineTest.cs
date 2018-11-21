@@ -56,6 +56,7 @@ namespace Microsoft.AspNetCore.Razor.Language.Test
                 feature => Assert.IsType<DefaultTagHelperOptimizationPass>(feature),
                 feature => Assert.IsType<DesignTimeDirectivePass>(feature),
                 feature => Assert.IsType<DirectiveRemovalOptimizationPass>(feature),
+                feature => Assert.IsType<EliminateMethodBodyPass>(feature),
                 feature => Assert.IsType<HtmlNodeOptimizationPass>(feature),
                 feature => Assert.IsType<MetadataAttributePass>(feature),
                 feature => Assert.IsType<PreallocatedTagHelperAttributeOptimizationPass>(feature));

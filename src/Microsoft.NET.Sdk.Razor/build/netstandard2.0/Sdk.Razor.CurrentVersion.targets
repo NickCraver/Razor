@@ -51,7 +51,7 @@ Copyright (c) .NET Foundation. All rights reserved.
     </PrepareForRazorGenerateDependsOn>
 
     <PrepareForRazorComponentGenerateDependsOn>
-      ResolveRazorComponentConfiguration;
+      ResolveRazorConfiguration;
       ResolveRazorComponentInputs;
       AssignRazorComponentTargetPaths;
     </PrepareForRazorComponentGenerateDependsOn>
@@ -66,7 +66,7 @@ Copyright (c) .NET Foundation. All rights reserved.
       PrepareForRazorComponentGenerate;
       RazorComponentGenerateCore
     </RazorComponentGenerateDependsOn>
-  
+
     <PrepareForRazorCompileDependsOn>
       RazorGenerate;
       ResolveRazorCompileInputs;
@@ -144,8 +144,7 @@ Copyright (c) .NET Foundation. All rights reserved.
     <!-- Output directory used for generated files -->
     <RazorGenerateIntermediateOutputPath Condition="'$(RazorGenerateIntermediateOutputPath)'==''">$(IntermediateOutputPath)Razor\</RazorGenerateIntermediateOutputPath>
 
-    <!-- Output directory used for generated declarations -->
-    <RazorComponentIntermediateOutputPath Condition="'$(RazorDeclarationsIntermediateOutputPath)'==''">$(IntermediateOutputPath)RazorComponent\</RazorComponentIntermediateOutputPath>
+    <_RazorComponentDeclarationOutputPath Condition="'$(_RazorComponentDeclarationOutputPath)'==''">$(IntermediateOutputPath)RazorDeclaration\</_RazorComponentDeclarationOutputPath>
 
     <!--
       Use the suffix .Views when producing compiled view assemblies. This matches the requirements for Mvc's ViewsFeatureProvider.
@@ -154,11 +153,11 @@ Copyright (c) .NET Foundation. All rights reserved.
 
     <!-- Suffix appended to $(TargetName) to produce $(RazorTargetName), the name of the assembly produced by Razor -->
     <RazorTargetNameSuffix Condition="'$(RazorTargetNameSuffix)' == ''">.Razor</RazorTargetNameSuffix>
-    
+
     <!-- File name (without extension) of the assembly produced by Razor -->
     <RazorTargetName Condition="'$(RazorTargetName)'==''">$(TargetName)$(RazorTargetNameSuffix)</RazorTargetName>
 
-   <!--
+    <!--
       The compatibility zone - these properties were provided by the MVC Precompilation tool and they
       map to supported settings in Razor SDK.
 
@@ -229,7 +228,7 @@ Copyright (c) .NET Foundation. All rights reserved.
   <ItemGroup>
     <!-- Used to creating the final compiled Razor dll -->
     <RazorIntermediateAssembly Condition="'$(RazorIntermediateAssembly)'==''" Include="$(IntermediateOutputPath)$(RazorTargetName).dll" />
-    <!-- Used in Compilation.targets -->   
+    <!-- Used in Compilation.targets -->
     <_RazorDebugSymbolsIntermediatePath Condition="'$(_RazorDebugSymbolsProduced)'=='true'" Include="$(IntermediateOutputPath)$(RazorTargetName).pdb" />
   </ItemGroup>
 
@@ -298,7 +297,7 @@ Copyright (c) .NET Foundation. All rights reserved.
     Computes the applicable @(ResolvedRazorConfiguration) and @(ResolvedRazorExtension) items that match the project's
     configuration. 
   -->
-  <Target 
+  <Target
     Name="ResolveRazorConfiguration"
     Condition="'$(RazorDefaultConfiguration)'!=''">
 
@@ -309,18 +308,6 @@ Copyright (c) .NET Foundation. All rights reserved.
     <FindInList List="@(RazorExtension)" ItemSpecToFind="@(ResolvedRazorConfiguration->Metadata('Extensions'))">
       <Output TaskParameter="ItemFound" ItemName="ResolvedRazorExtension" />
     </FindInList>
-  </Target>
-
-  <!--
-    Computes the applicable @(ResolvedRazorComponentConfiguration) that match the project's configuration.
-  -->
-  <Target
-    Name="ResolveRazorComponentConfiguration"
-    Condition="'$(RazorDefaultComponentConfiguration)'!=''">
-
-    <ItemGroup>
-      <ResolvedRazorComponentConfiguration Include="@(RazorComponentConfiguration->WithMetadataValue('Identity', '$(RazorDefaultComponentConfiguration)')->Distinct())" />
-    </ItemGroup>
   </Target>
 
   <!--
@@ -338,7 +325,7 @@ Copyright (c) .NET Foundation. All rights reserved.
     <_GenerateRazorAssemblyInfoDependsOn>RazorGetAssemblyAttributes;$(_GenerateRazorAssemblyInfoDependsOn)</_GenerateRazorAssemblyInfoDependsOn>
   </PropertyGroup>
 
-  <Target 
+  <Target
     Name="RazorGetAssemblyAttributes"
     Condition="'$(GenerateRazorHostingAssemblyInfo)'=='true' and '$(RazorDefaultConfiguration)'!=''"
     DependsOnTargets="ResolveRazorConfiguration">
@@ -393,7 +380,7 @@ Copyright (c) .NET Foundation. All rights reserved.
       '$(CopyRazorGenerateFilesToPublishDirectory)'=='false' and 
       '$(ResolvedRazorCompileToolset)'=='RazorSdk' and 
       '$(RazorCompileOnPublish)'=='true'">
-      
+
       <Content Condition="'%(Content.Extension)'=='.cshtml'" CopyToPublishDirectory="Never" />
     </ItemGroup>
 
@@ -426,11 +413,15 @@ Copyright (c) .NET Foundation. All rights reserved.
 
     <ItemGroup>
       <RazorComponentWithTargetPath Condition="'%(RazorComponentWithTargetPath.GeneratedOutput)' == ''">
-        <GeneratedOutput>$(RazorComponentIntermediateOutputPath)%(RazorComponentWithTargetPath.TargetPath)$(RazorGenerateOutputFileExtension)</GeneratedOutput>
+        <GeneratedOutput>$(RazorGenerateIntermediateOutputPath)%(RazorComponentWithTargetPath.TargetPath)$(RazorGenerateOutputFileExtension)</GeneratedOutput>
       </RazorComponentWithTargetPath>
 
       <RazorComponentWithTargetPath Condition="'%(RazorComponentWithTargetPath.GeneratedDeclaration)' == ''">
-        <GeneratedDeclaration>$(RazorComponentIntermediateOutputPath)%(RazorComponentWithTargetPath.TargetPath)$(RazorGenerateOutputDefinitionFileExtension)</GeneratedDeclaration>
+        <GeneratedDeclaration>$(_RazorComponentDeclarationOutputPath)%(RazorComponentWithTargetPath.TargetPath)$(RazorGenerateOutputFileExtension)</GeneratedDeclaration>
+      </RazorComponentWithTargetPath>
+
+      <RazorComponentWithTargetPath Condition="'%(RazorComponentWithTargetPath.DocumentKind)' == ''">
+        <DocumentKind>component</DocumentKind>
       </RazorComponentWithTargetPath>
     </ItemGroup>
   </Target>
@@ -444,6 +435,10 @@ Copyright (c) .NET Foundation. All rights reserved.
       <RazorGenerateWithTargetPath Condition="'%(RazorGenerateWithTargetPath.GeneratedOutput)' == ''">
         <GeneratedOutput>$(RazorGenerateIntermediateOutputPath)%(RazorGenerateWithTargetPath.TargetPath)$(RazorGenerateOutputFileExtension)</GeneratedOutput>
       </RazorGenerateWithTargetPath>
+
+      <RazorGenerateWithTargetPath Condition="'%(RazorGenerateWithTargetPath.DocumentKind)' == ''">
+        <DocumentKind>mvc</DocumentKind>
+      </RazorGenerateWithTargetPath>
     </ItemGroup>
   </Target>
 
@@ -455,8 +450,20 @@ Copyright (c) .NET Foundation. All rights reserved.
     DependsOnTargets="ResolveReferences">
     <ItemGroup>
       <RazorReferencePath Include="@(ReferencePath)"/>
-      <RazorReferencePath Include="$([System.IO.Path]::GetFullPath('$(IntermediateOutputPath)$(TargetName)$(TargetExt)'))"/>
     </ItemGroup>
+
+    <PropertyGroup>
+      <!--
+        Assembly of the project used as input in RazorGenerate. This property is overwritten to point to the definition assembly when components are present.
+      -->
+      <_RazorGenerateTargetReferenceAssembly Condition="'$(_RazorGenerateTargetReferenceAssembly)'==''">
+        @(IntermediateAssembly->Metadata('FullPath'))
+      </_RazorGenerateTargetReferenceAssembly>
+
+      <_RazorCompileTargetReferenceAssembly Condition="'$(_RazorCompileTargetReferenceAssembly)'==''">
+        @(IntermediateAssembly->Metadata('FullPath'))
+      </_RazorCompileTargetReferenceAssembly>
+    </PropertyGroup>
   </Target>
 
   <!--
@@ -487,7 +494,7 @@ Copyright (c) .NET Foundation. All rights reserved.
     This target just hooks up other targets since Publish and PrepareForPublish don't have a DependsOnTargets
     property we can use. 
   -->
-  <Target 
+  <Target
     Name="_RazorPrepareForPublish"
     AfterTargets="PrepareForPublish"
     DependsOnTargets="RazorCompile"
@@ -497,7 +504,7 @@ Copyright (c) .NET Foundation. All rights reserved.
   <!--
     This target adds the Razor assembly to the BuiltProjectOutputGroupOutput - which is used as input to the Pack target.
   -->
-  <Target 
+  <Target
     Name="_RazorAddBuiltProjectOutputGroupOutput"
     DependsOnTargets="_ResolveRazorTargetPath;ResolveRazorGenerateInputs"
     Condition="'$(ResolvedRazorCompileToolset)'=='RazorSdk' and '$(RazorCompileOnBuild)'=='true'">
@@ -516,7 +523,7 @@ Copyright (c) .NET Foundation. All rights reserved.
     <ItemGroup Condition="Exists('@(_RazorDebugSymbolsIntermediatePath)')">
       <DebugSymbolsProjectOutputGroupOutput Include="%(_RazorDebugSymbolsIntermediatePath.FullPath)" FinalOutputPath="$(RazorTargetDir)$(RazorTargetName).pdb" />
     </ItemGroup>
-    
+
   </Target>
 
   <!--
@@ -532,7 +539,7 @@ Copyright (c) .NET Foundation. All rights reserved.
     Called as part of GetCopyToOutputDirectoryItems - this target populates the list of items that get
     copied to the output directory when building as a project reference.
   -->
-  <Target 
+  <Target
     Name="_RazorGetCopyToOutputDirectoryItems"
     DependsOnTargets="ResolveRazorGenerateInputs"
     Condition="'$(ResolvedRazorCompileToolset)'=='RazorSdk' and '$(RazorCompileOnBuild)'=='true'">
@@ -588,8 +595,8 @@ Copyright (c) .NET Foundation. All rights reserved.
     Called as part of CopyFilesToOutputDirectory - this target is called when building the project to copy
     files to the output directory.
   -->
-  <Target 
-    Name="_RazorCopyFilesToOutputDirectory" 
+  <Target
+    Name="_RazorCopyFilesToOutputDirectory"
     DependsOnTargets="_ResolveRazorTargetPath;RazorCompile"
     AfterTargets="CopyFilesToOutputDirectory"
     Condition="'$(ResolvedRazorCompileToolset)'=='RazorSdk' and '$(RazorCompileOnBuild)'=='true'">
@@ -610,9 +617,9 @@ Copyright (c) .NET Foundation. All rights reserved.
       <Output TaskParameter="DestinationFiles" ItemName="FileWrites"/>
     </Copy>
 
-    <Message 
-      Importance="High" 
-      Text="$(MSBuildProjectName) -&gt; @(_RazorAssembly->'%(FullPath)')" 
+    <Message
+      Importance="High"
+      Text="$(MSBuildProjectName) -&gt; @(_RazorAssembly->'%(FullPath)')"
       Condition="Exists('@(RazorIntermediateAssembly)') and '$(CopyBuildOutputToOutputDirectory)' == 'true' and '$(SkipCopyBuildProduct)'!='true'" />
 
     <!-- Copy the Razor debug information file (.pdb), if any -->
@@ -638,7 +645,7 @@ Copyright (c) .NET Foundation. All rights reserved.
     <Touch Files="@(CopyUpToDateMarker)" AlwaysCreate="true" Condition="'@(_RazorAssembly)' != ''">
       <Output TaskParameter="TouchedFiles" ItemName="FileWrites" />
     </Touch>
-    
+
   </Target>
 
   <!--
@@ -678,7 +685,7 @@ Copyright (c) .NET Foundation. All rights reserved.
       most usages of Razor. There's no setting that excludes just the ref assemblies, so we do it ourselves. 
     -->
     <ItemGroup>
-      <ResolvedFileToPublish 
+      <ResolvedFileToPublish
         Remove="%(ResolvedFileToPublish.Identity)"
         Condition="'%(ResolvedFileToPublish.RelativePath)'=='$(RefAssembliesFolderName)\%(Filename)%(Extension)'"/>
     </ItemGroup>
